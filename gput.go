@@ -42,19 +42,8 @@ func authenticate() (authToken string, err error) {
 	var m map[string]interface{}
 	json.Unmarshal(responseBody, &m)
 
-	for key, _ := range m {
-		fmt.Println(key)
-	}
-
-	access, found := m["access"]
-	if !found {
-		err = errors.New("Invalid response body")
-	}
-
-	m, ok := access.(map[string]interface{})
-	if ok {
-		printKeys(m)
-	}
+	value, _ := findJsonValue("access/serviceCatalog/endpoints/publicURL", m)
+	fmt.Println(strings.Join(value, "\n"))
 
 	return "", err
 }
@@ -74,8 +63,45 @@ func panicIf(err error) {
 	}
 }
 
-func printKeys(m map[string]interface{}) {
-	for key, _ := range m {
-		fmt.Println(key)
+type jsonMap map[string]interface{}
+
+func findJsonValue(searchKey string, m jsonMap) (foundValues []string, found bool) {
+	var _search func(jsonMap, []string)
+	_search = func(m jsonMap, path []string) {
+		keys := mapKeys(m)
+		for _, key := range keys {
+			value := m[key]
+			switch value.(type) {
+			case string:
+				p := append(path, key)
+				fmt.Printf("%v\n", strings.Join(p, "/"))
+				if searchKey == strings.Join(p, "/") {
+					foundValues = append(foundValues, value.(string))
+					found = true
+				}
+			case map[string]interface{}:
+				_search(value.(map[string]interface{}), append(path, key))
+
+			case []interface{}:
+				array, _ := value.([]interface{})
+				for _, element := range array {
+					element, ok := element.(map[string]interface{})
+					if ok {
+						_search(element, append(path, key))
+					}
+				}
+			}
+		}
 	}
+	_search(m, make([]string, 0))
+	return
+}
+
+func mapKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+
+	for key, _ := range m {
+		keys = append(keys, key)
+	}
+	return keys
 }
