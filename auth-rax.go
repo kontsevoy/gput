@@ -16,7 +16,6 @@ import (
 
 const (
 	identityUrl = "https://identity.api.rackspacecloud.com/v2.0/tokens"
-	apiKey      = "a7a1a2d651d746e89eee1e8def447827"
 	authRequest = `{ "auth": {
 				"RAX-KSKEY:apiKeyCredentials": {
 					"apiKey": "%s",
@@ -61,7 +60,7 @@ type AuthInfo struct {
 }
 
 // Authenticates against Rackspace Auth and returns an authentication token
-func authenticate() (authInfo AuthInfo, err error) {
+func authenticate(apiKey string) (authInfo AuthInfo, err error) {
 	// HTTP POST to auth URL:
 	requestBody := fmt.Sprintf(authRequest, apiKey)
 	response, err := http.Post(identityUrl, "application/json",

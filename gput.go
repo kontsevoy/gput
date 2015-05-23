@@ -6,11 +6,14 @@ import (
 )
 
 func main() {
+	// read the command line arguments and the config file
+	params, err := ProcessConfig()
+	exitIf(err)
+
 	// authenticate into Rackspace:
-	rax, err := authenticate()
+	rax, err := authenticate(params.ApiKey)
 	if err != nil {
-		fmt.Printf("%v when trying to authenticate\n", err)
-		return
+		exitIf(fmt.Errorf("%v when trying to authenticate\n", err))
 	}
 
 	// Make HTTP put call:
