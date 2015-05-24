@@ -136,7 +136,7 @@ func (s *RaxSession) listObjects(container string) (err error) {
 	}
 
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(body)
+	fmt.Println(string(body))
 	return
 }
 
@@ -149,12 +149,12 @@ func (s *RaxSession) upsertObject(r io.Reader, container string, objectName stri
 	panicIf(err)
 
 	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
-	request.Header.Add("Content-Type", "text/plain")
 
 	fmt.Println(request.Header)
 
 	response, err := http.DefaultClient.Do(request)
 	panicIf(err)
 
-	fmt.Println(response)
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println(string(body))
 }

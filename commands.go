@@ -15,10 +15,25 @@ type Params struct {
 	ApiUser    string
 	Container  string
 	ObjectName string
+	Command    string
+	Parameter  string
 }
 
 const (
 	DefaultConfigFile = "~/.gput.ini"
+	DefaultCommand    = "put"
+)
+
+// list of possible commands:
+const (
+	CommandPut  = "put"    // uploads object into a container
+	CommandList = "list"   // lists containers or/and objects
+	CommandDel  = "delete" // deletes object/container
+
+)
+
+var (
+	PossibleCommands = []string{CommandPut, CommandList, CommandDel}
 )
 
 // Parses the command line arguments and reads the config file if specified
@@ -30,6 +45,7 @@ func ProcessConfig() (params Params, err error) {
 	if err != nil {
 		return
 	}
+
 	// merge ini and command line values (command line overrides):
 	if params.ApiKey == "" {
 		params.ApiKey = iniConf.Get("Auth", "key")
@@ -40,8 +56,6 @@ func ProcessConfig() (params Params, err error) {
 	if params.Container == "" {
 		params.Container = iniConf.Get("CloudFiles", "container")
 	}
-
-	log.Println(iniConf)
 
 	// check correctness:
 	err = checkConfig(&params)
@@ -59,6 +73,10 @@ func checkConfig(p *Params) error {
 	if p.Container == "" {
 		return errors.New("Container is not specified")
 	}
+	if p.Command == "" {
+		p.Command = DefaultCommand
+	}
+
 	return nil
 }
 
@@ -68,6 +86,16 @@ func parseCommandLine() (params Params) {
 	flag.StringVar(&params.ApiUser, "user", "", "Rackspace API username")
 	flag.StringVar(&params.Container, "container", "", "Default Cloud Files container name")
 	flag.Parse()
+
+	params.Command = flag.Arg(0)
+	params.Parameter = flag.Arg(1)
+
+	// first command is a file name? assume it's a parameter
+	if fileExists(params.Command) {
+		params.Command = DefaultCommand
+		params.Parameter = flag.Arg(0)
+	}
+
 	return
 }
 

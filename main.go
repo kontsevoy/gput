@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"log"
+	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -16,7 +18,27 @@ func main() {
 		exitIf(fmt.Errorf("%v when trying to authenticate\n", err))
 	}
 
-	session.listContainers()
-	session.listObjects(params.Container)
-	session.upsertObject(strings.NewReader("hello world"), params.Container, "hello.txt")
+	switch params.Command {
+	case CommandList:
+		if params.Parameter == "" {
+			// list containers:
+			session.listContainers()
+		} else {
+			// list objects in a container:
+			params.Container = params.Parameter
+			session.listObjects(params.Container)
+		}
+	case CommandPut:
+		// upload an object:
+		if params.Parameter == "" {
+			log.Fatalf("No file specified")
+		}
+		file, err := os.Open(params.Parameter)
+		if err != nil {
+			log.Fatal(err)
+		}
+		session.upsertObject(file, params.Container, filepath.Base(params.Parameter))
+	default:
+		fmt.Println("No command specified")
+	}
 }
