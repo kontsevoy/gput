@@ -1,7 +1,6 @@
-/*
-Very simple ini file parser.
-	- does not support quoting or white space in key names/values (removes spaces)
-*/
+// Parser for ini and conf files.
+// Usage
+//
 package main
 
 import (
@@ -21,7 +20,11 @@ type IniConfig struct {
 }
 
 func (conf *IniConfig) Get(section string, name string) string {
-	return conf.m[ToLower(section)][ToLower(name)]
+	return conf.GetSection(section)[normalize(name)]
+}
+
+func (conf *IniConfig) GetSection(section string) map[string]string {
+	return conf.m[normalize(section)]
 }
 
 // ParseIniFile reads the supplied ini-file and returns a IniConf structure
@@ -33,17 +36,29 @@ func ParseIniFile(fileName string) (conf IniConfig, err error) {
 	err = processIniFile(fileName,
 		// adds a new section to the conf
 		func(section string) {
-			currentSection = ToLower(Trim(section, TrimChars))
-			conf.m[currentSection] = make(map[string]string)
+			currentSection = normalize(section)
 		},
 		func(name string) {
-			currentName = ToLower(Trim(name, TrimChars))
+			currentName = normalize(name)
 		},
 		// adds a new key/value pair to the current section in conf
 		func(value string) {
+			if value == "" {
+				return
+			}
+			_, haveSection := conf.m[currentSection]
+			if !haveSection {
+				conf.m[currentSection] = make(map[string]string)
+			}
 			conf.m[currentSection][currentName] = Trim(value, TrimChars)
 		})
 	return
+}
+
+// normalize() is called on all section names and argument names, making
+// them case-insensitive and space-ignoring
+func normalize(key string) string {
+	return ToLower(Replace(key, " ", "", -1))
 }
 
 // processIniFile() actually scans the file, finding config sections
@@ -60,10 +75,10 @@ func processIniFile(fileName string,
 		StateComment
 	)
 
-	state := StateSection // initially look for opening section
-	buffer := ""          // buffer to accumulate tokens
-	token := ""           // current token
-	line := 1             // keeps track of the last line to detect newlines
+	state := StateName // initially look for opening section
+	buffer := ""       // buffer to accumulate tokens
+	token := ""        // current token
+	line := 0          // keeps track of the last line to detect newlines
 	var (
 		pos Position
 		s   Scanner
@@ -107,10 +122,11 @@ func processIniFile(fileName string,
 	for tok := s.Scan(); tok != EOF; tok = s.Scan() {
 		pos = s.Pos()
 		token = s.TokenText()
-		newline := pos.Line > line
+		newline := (pos.Line > line)
 
 		// ignore comments right away:
 		if newline && token == CommentChar {
+			addValue(buffer)
 			flipTo(StateComment)
 		} else {
 			// wich state is the scanner in?
@@ -124,15 +140,16 @@ func processIniFile(fileName string,
 					addValue(buffer)
 					if token == "[" {
 						flipTo(StateSection)
+						continue
 					} else {
 						flipTo(StateName)
 					}
-				} else {
-					buffer += token
 				}
+				buffer += token
 			case StateComment:
 				if newline { // comment ended
-					flipTo(StateSection)
+					flipTo(StateName)
+					onName()
 				}
 			}
 		}
