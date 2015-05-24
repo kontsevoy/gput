@@ -1,7 +1,4 @@
-/*
-Rackspace API wrapper which includes:
-	- Authentication
-*/
+/* Rackspace API wrapper */
 package main
 
 import (
@@ -57,14 +54,14 @@ type RaxSession struct {
 			} `json:"roles"`
 		} `json:"user"`
 	} `json:"access"`
+
+	Region string
 }
 
 // Authenticates against Rackspace Auth and returns an authentication token
 func authenticate(apiKey string) (session RaxSession, err error) {
-	// HTTP POST to auth URL:
 	requestBody := fmt.Sprintf(authRequest, apiKey)
-	response, err := http.Post(identityUrl, "application/json",
-		strings.NewReader(requestBody))
+	response, err := http.Post(identityUrl, "application/json", strings.NewReader(requestBody))
 	if err != nil {
 		return
 	}
@@ -101,16 +98,13 @@ func (ai *RaxSession) getEntryPoint(region string, serviceType string) (entryPoi
 
 // getUrl() return object store URL
 func (s *RaxSession) getObjectStoreUrl() string {
-	return s.getEntryPoint("DFW", "object-store")
+	return s.getEntryPoint(s.Region, "object-store")
 }
 
+// listContainers() makes a GET request to list the root containers
+// under customer account
 func (s *RaxSession) listContainers() (err error) {
-	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=text", nil)
-	if err != nil {
-		return
-	}
-	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
-
+	request := s.makeRequest("GET", s.getObjectStoreUrl()+"?format=text", nil)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return
@@ -120,21 +114,13 @@ func (s *RaxSession) listContainers() (err error) {
 	return
 }
 
+// listObjects() makes a GET request to list all files(objects) in a container
 func (s *RaxSession) listObjects(container string) (err error) {
-	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=json", nil)
-	if err != nil {
-		return
-	}
-
-	request, err = http.NewRequest("GET", s.getObjectStoreUrl()+"/"+container, nil)
-	panicIf(err)
-	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
-
+	request := s.makeRequest("GET", s.getObjectStoreUrl()+"/"+container, nil)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return
 	}
-
 	body, _ := ioutil.ReadAll(response.Body)
 	fmt.Println(string(body))
 	return
@@ -143,37 +129,35 @@ func (s *RaxSession) listObjects(container string) (err error) {
 // Create/update CloudFiles object (file)
 func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string) {
 	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
-	fmt.Println(url)
+	request := s.makeRequest("PUT", url, r)
 
-	request, err := http.NewRequest("PUT", url, r)
+	resp, err := http.DefaultClient.Do(request)
 	panicIf(err)
 
-	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
-
-	fmt.Println(request.Header)
-
-	response, err := http.DefaultClient.Do(request)
-	panicIf(err)
-
-	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(string(body))
+	fmt.Println(resp.Status)
 }
 
 // Delete cloud files object:
 func (s *RaxSession) deleteObject(container string, objectName string) {
 	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
-	fmt.Println(url)
-
-	request, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		return
-	}
-	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
+	request := s.makeRequest("DELETE", url, nil)
 
 	r, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("Object deleted: %v", r.Status)
+	if r.StatusCode == http.StatusNoContent {
+		fmt.Println("File deleted")
+	} else {
+		fmt.Println(r.Status)
+	}
+}
+
+// makeRequest is a helper function: it prepares HTTP requests with X-Auth-Token set
+func (s *RaxSession) makeRequest(verb string, url string, reader io.Reader) (request *http.Request) {
+	request, err := http.NewRequest(verb, url, reader)
+	panicIf(err)
+	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
+	return
 }

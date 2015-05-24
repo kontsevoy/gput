@@ -17,6 +17,10 @@ func exitIf(err error) {
 	}
 }
 
+func exitWith(message string) {
+	log.Fatal(message)
+}
+
 // fileExists() returns true if a file exists
 func fileExists(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {

@@ -1,8 +1,15 @@
 package main
 
+/*
+This file contains code to deal with parameters/configuration, including:
+	- command line arguments
+	- ini file
+*/
+
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os/user"
 	"path/filepath"
@@ -10,12 +17,13 @@ import (
 )
 
 type Params struct {
-	ConfigPath string
+	ConfigPath string // path to a config file
 	ApiKey     string
 	ApiUser    string
 	Container  string
 	ObjectName string
 	Command    string
+	Region     string
 	Parameter  string
 }
 
@@ -24,12 +32,23 @@ const (
 	DefaultCommand    = "put"
 )
 
+const ConfigTemplate = `; Save this into ~/.gput.ini
+[Auth]
+key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+username=xxxxxxxxxxxxx
+
+; Section to configure default cloud files options
+[Cloud Files]
+container=public-container
+region=DFW
+`
+
 // list of possible commands:
 const (
-	CommandPut  = "put"    // uploads object into a container
-	CommandList = "list"   // lists containers or/and objects
-	CommandDel  = "delete" // deletes object/container
-
+	CommandPut      = "put"    // uploads object into a container
+	CommandList     = "list"   // lists containers or/and objects
+	CommandDel      = "delete" // deletes object/container
+	CommandTemplate = "gen"    // generates a dumps a sample config file
 )
 
 var (
@@ -56,6 +75,10 @@ func ProcessConfig() (params Params, err error) {
 	if params.Container == "" {
 		params.Container = iniConf.Get("CloudFiles", "container")
 	}
+	if params.Region == "" {
+		params.Region = iniConf.Get("CloudFiles", "region")
+	}
+	params.Region = strings.ToUpper(params.Region)
 
 	// check correctness:
 	err = checkConfig(&params)
@@ -73,6 +96,9 @@ func checkConfig(p *Params) error {
 	if p.Container == "" {
 		return errors.New("Container is not specified")
 	}
+	if p.Region == "" {
+		return errors.New("Region (like 'DFW', 'ORD', etc) is not specified")
+	}
 	if p.Command == "" {
 		p.Command = DefaultCommand
 	}
@@ -81,10 +107,32 @@ func checkConfig(p *Params) error {
 }
 
 func parseCommandLine() (params Params) {
-	flag.StringVar(&params.ConfigPath, "config", "", "Path to the config file")
+	flag.StringVar(&params.ConfigPath, "config", "", "path to a config file")
 	flag.StringVar(&params.ApiKey, "key", "", "Rackspace API key")
 	flag.StringVar(&params.ApiUser, "user", "", "Rackspace API username")
-	flag.StringVar(&params.Container, "container", "", "Default Cloud Files container name")
+	flag.StringVar(&params.Container, "container", "", "Cloud Files container name")
+	flag.StringVar(&params.Region, "region", "", "Cloud Files region to use, like DFW, ORD, etc")
+
+	flag.Usage = func() {
+		fmt.Printf("gput is a client for Rackspace Cloud files\n\n")
+		fmt.Printf("Usage:\n\tgput <options> <command> <file>\n\n")
+		fmt.Printf("Commands:\n")
+		fmt.Printf("\tput   :\tUpload file into a container. This command executes by default.\n")
+		fmt.Printf("\tlist  :\tLlist containers or files within a container\n")
+		fmt.Printf("\tdelete:\tDelete file in a container\n")
+		fmt.Printf("\tgen   :\tGenerate a template config file\n\n")
+		fmt.Printf("Options:\n")
+		flag.VisitAll(func(f *flag.Flag) {
+			fmt.Printf("\t-%v : %v\n", f.Name, f.Usage)
+		})
+		fmt.Printf("\nExamples:\n")
+		fmt.Printf("\tgput -region DFW list\n")
+		fmt.Printf("\tgput -region DFW -container public-container list\n")
+		fmt.Printf("\tgput -region DFW list public-container\n")
+		fmt.Printf("\tgput -region DFW -container public-container delete example.txt\n")
+		fmt.Printf("\tgput -region DFW put example.txt\n")
+	}
+
 	flag.Parse()
 
 	params.Command = flag.Arg(0)
