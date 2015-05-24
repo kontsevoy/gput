@@ -1,10 +1,35 @@
-// Parser for ini and conf files.
-// Usage
-//
 package main
+
+/*
+Parser for ini and conf files.
+Usage:
+
+	conf, err := ParseIniFile("example.ini")
+	conf.Get("First", "Setting")      // returns "value"
+	conf.Get("First", "non-existing") // returns empty string
+	conf.GetSectionNames()            // returns ["First", "Second"]
+
+	// conf-files are the same as ini files, except there is no section,
+	// pass an empty string:
+	conf, err := ParseIniFile("example.conf")
+	conf.Get("", "Setting")          // returns "value"
+
+example.ini:
+
+	[First]
+	Setting=value
+
+	; comments are ignored
+	[Second]
+	Another="value can be in quotes"
+
+example.conf:
+	Setting=value
+*/
 
 import (
 	"os"
+	"sort"
 	. "strings"
 	. "text/scanner"
 )
@@ -25,6 +50,14 @@ func (conf *IniConfig) Get(section string, name string) string {
 
 func (conf *IniConfig) GetSection(section string) map[string]string {
 	return conf.m[normalize(section)]
+}
+
+func (conf *IniConfig) GetSectionNames() (names sort.StringSlice) {
+	for s, _ := range conf.m {
+		names = append(names, s)
+	}
+	names.Sort()
+	return names
 }
 
 // ParseIniFile reads the supplied ini-file and returns a IniConf structure
@@ -58,7 +91,7 @@ func ParseIniFile(fileName string) (conf IniConfig, err error) {
 // normalize() is called on all section names and argument names, making
 // them case-insensitive and space-ignoring
 func normalize(key string) string {
-	return ToLower(Replace(key, " ", "", -1))
+	return Trim(ToLower(Replace(key, " ", "", -1)), TrimChars)
 }
 
 // processIniFile() actually scans the file, finding config sections
@@ -75,7 +108,7 @@ func processIniFile(fileName string,
 		StateComment
 	)
 
-	state := StateName // initially look for opening section
+	state := StateName // initially start looking for setting names
 	buffer := ""       // buffer to accumulate tokens
 	token := ""        // current token
 	line := 0          // keeps track of the last line to detect newlines
@@ -124,7 +157,7 @@ func processIniFile(fileName string,
 		token = s.TokenText()
 		newline := (pos.Line > line)
 
-		// ignore comments right away:
+		// ignore new lines that start as comments
 		if newline && token == CommentChar {
 			addValue(buffer)
 			flipTo(StateComment)
@@ -155,7 +188,7 @@ func processIniFile(fileName string,
 		}
 		line = pos.Line
 	}
-	// pick up the accumulated buffer as the last value:
+	// save the accumulated buffer (last line value)
 	if state == StateValue {
 		addValue(buffer)
 	}
