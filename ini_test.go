@@ -11,6 +11,6 @@ func TestIni(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Printf("Key: %v\n", conf.Get("Auth", "key"))
+	//fmt.Printf("Key: %v\n", conf.Get("Auth", "key"))
 	fmt.Println(conf)
 }

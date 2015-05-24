@@ -10,6 +10,11 @@ import (
 	. "text/scanner"
 )
 
+const (
+	TrimChars   = "\"'"
+	CommentChar = ";"
+)
+
 // IniConfig type stores all values found in a ini-file
 type IniConfig struct {
 	m map[string]map[string]string
@@ -28,15 +33,15 @@ func ParseIniFile(fileName string) (conf IniConfig, err error) {
 	err = processIniFile(fileName,
 		// adds a new section to the conf
 		func(section string) {
-			currentSection = ToLower(section)
+			currentSection = ToLower(Trim(section, TrimChars))
 			conf.m[currentSection] = make(map[string]string)
 		},
 		func(name string) {
-			currentName = ToLower(name)
+			currentName = ToLower(Trim(name, TrimChars))
 		},
 		// adds a new key/value pair to the current section in conf
 		func(value string) {
-			conf.m[currentSection][currentName] = value
+			conf.m[currentSection][currentName] = Trim(value, TrimChars)
 		})
 	return
 }
@@ -52,6 +57,7 @@ func processIniFile(fileName string,
 		StateSection = iota
 		StateName
 		StateValue
+		StateComment
 	)
 
 	state := StateSection // initially look for opening section
@@ -71,13 +77,10 @@ func processIniFile(fileName string,
 
 	// processes one token when parser is in "parsing section" state
 	onSection := func() {
-		switch token {
-		case "[":
-			return
-		case "]":
+		if token == "]" {
 			addSection(buffer)
 			flipTo(StateName)
-		default:
+		} else {
 			buffer += token
 		}
 	}
@@ -104,24 +107,34 @@ func processIniFile(fileName string,
 	for tok := s.Scan(); tok != EOF; tok = s.Scan() {
 		pos = s.Pos()
 		token = s.TokenText()
+		newline := pos.Line > line
 
-		// wich state is the scanner in?
-		switch state {
-		case StateSection:
-			onSection()
-		case StateName:
-			onName()
-		case StateValue:
-			if pos.Line > line { // newline?
-				addValue(buffer)
-				if token == "[" {
-					flipTo(StateSection)
-					continue
+		// ignore comments right away:
+		if newline && token == CommentChar {
+			flipTo(StateComment)
+		} else {
+			// wich state is the scanner in?
+			switch state {
+			case StateSection:
+				onSection()
+			case StateName:
+				onName()
+			case StateValue:
+				if newline {
+					addValue(buffer)
+					if token == "[" {
+						flipTo(StateSection)
+					} else {
+						flipTo(StateName)
+					}
 				} else {
-					flipTo(StateName)
+					buffer += token
+				}
+			case StateComment:
+				if newline { // comment ended
+					flipTo(StateSection)
 				}
 			}
-			buffer += token
 		}
 		line = pos.Line
 	}
