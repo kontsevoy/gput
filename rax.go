@@ -105,7 +105,7 @@ func (s *RaxSession) getObjectStoreUrl() string {
 }
 
 func (s *RaxSession) listContainers() (err error) {
-	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=json", nil)
+	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=text", nil)
 	if err != nil {
 		return
 	}
@@ -116,7 +116,7 @@ func (s *RaxSession) listContainers() (err error) {
 		return
 	}
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(body)
+	fmt.Println(string(body))
 	return
 }
 
@@ -157,4 +157,23 @@ func (s *RaxSession) upsertObject(r io.Reader, container string, objectName stri
 
 	body, _ := ioutil.ReadAll(response.Body)
 	fmt.Println(string(body))
+}
+
+// Delete cloud files object:
+func (s *RaxSession) deleteObject(container string, objectName string) {
+	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
+	fmt.Println(url)
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return
+	}
+	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
+
+	r, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("Object deleted: %v", r.Status)
 }

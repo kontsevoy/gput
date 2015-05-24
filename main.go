@@ -38,6 +38,13 @@ func main() {
 			log.Fatal(err)
 		}
 		session.upsertObject(file, params.Container, filepath.Base(params.Parameter))
+
+	case CommandDel:
+		if params.Container == "" {
+			log.Fatal("No container specified")
+		}
+		session.deleteObject(params.Container, params.Parameter)
+
 	default:
 		fmt.Println("No command specified")
 	}
