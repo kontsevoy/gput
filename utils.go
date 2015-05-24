@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 )
 
 func panicIf(err error) {
@@ -14,6 +15,14 @@ func exitIf(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// fileExists() returns true if a file exists
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 // stringIn() checks if str is present in the slice
