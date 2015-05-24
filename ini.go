@@ -1,3 +1,7 @@
+/*
+Very simple ini file parser.
+	- does not support quoting or white space in key names/values (removes spaces)
+*/
 package main
 
 import (
