@@ -82,19 +82,17 @@ func parseConfigFile(p *Params) (iniConf IniConfig, err error) {
 			return
 		}
 	} else {
-		// use default config file:
 		p.ConfigPath = DefaultConfigFile
-		me, e := user.Current()
+
 		// expand ~/ into full path:
-		if e != nil {
+		if me, e := user.Current(); e == nil {
 			p.ConfigPath = strings.Replace(p.ConfigPath, "~/", me.HomeDir+"/", 1)
 		}
 		if !fileExists(p.ConfigPath) {
-			log.Println("No config file specified. Using only command line args")
+			log.Printf("No such file: %v Using only command line args", p.ConfigPath)
 			return
 		}
 	}
-
 	// parse config files:
 	return ParseIniFile(p.ConfigPath)
 }

@@ -99,12 +99,36 @@ func (ai *RaxSession) getEntryPoint(region string, serviceType string) (entryPoi
 	return
 }
 
-func (ai *RaxSession) listContainers(url string) (err error) {
-	request, err := http.NewRequest("GET", url+"?format=json", nil)
+// getUrl() return object store URL
+func (s *RaxSession) getObjectStoreUrl() string {
+	return s.getEntryPoint("DFW", "object-store")
+}
+
+func (s *RaxSession) listContainers() (err error) {
+	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=json", nil)
 	if err != nil {
 		return
 	}
-	request.Header.Add("X-Auth-Token", ai.Access.Token.ID)
+	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return
+	}
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println(body)
+	return
+}
+
+func (s *RaxSession) listObjects(container string) (err error) {
+	request, err := http.NewRequest("GET", s.getObjectStoreUrl()+"?format=json", nil)
+	if err != nil {
+		return
+	}
+
+	request, err = http.NewRequest("GET", s.getObjectStoreUrl()+"/"+container, nil)
+	panicIf(err)
+	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -112,31 +136,19 @@ func (ai *RaxSession) listContainers(url string) (err error) {
 	}
 
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Printf("--> %v <--\n", string(body))
-
-	request, err = http.NewRequest("GET", url+"/ev-public", nil)
-	panicIf(err)
-	request.Header.Add("X-Auth-Token", ai.Access.Token.ID)
-
-	response, err = http.DefaultClient.Do(request)
-	if err != nil {
-		return
-	}
-
-	body, _ = ioutil.ReadAll(response.Body)
-	fmt.Printf("--> %v <--\n", string(body))
+	fmt.Println(body)
 	return
 }
 
 // Create/update CloudFiles object (file)
-func (ai *RaxSession) upsertObject(url string, r io.Reader, objectName string) {
-	url = strings.Join([]string{url, "ev-private", objectName}, "/")
+func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string) {
+	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
 	fmt.Println(url)
 
 	request, err := http.NewRequest("PUT", url, r)
 	panicIf(err)
 
-	request.Header.Add("X-Auth-Token", ai.Access.Token.ID)
+	request.Header.Add("X-Auth-Token", s.Access.Token.ID)
 	request.Header.Add("Content-Type", "text/plain")
 
 	fmt.Println(request.Header)
