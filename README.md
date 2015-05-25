@@ -3,7 +3,7 @@
 Actually this is not a true client, its usability is optimized for quickly uploading files into containers. 
 It can take most parameters out of `~/.gput.ini` file for quickness and convenience.
 
-For convenience, here are binaries for [64-bit Linux](build/gput-linux-x86_64) or [Mac OSX](build/gput-darwin) directly if you cannot compile from source.
+For convenience, here are binaries for [64-bit Linux](raw/master/build/gput-linux-x86_64) or [Mac OSX](raw/master/build/gput-darwin) directly if you cannot compile from source.
 
 #### Usage & Examples
 
