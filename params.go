@@ -17,14 +17,16 @@ import (
 )
 
 type Params struct {
-	ConfigPath string // path to a config file
-	ApiKey     string
-	ApiUser    string
-	Container  string
-	ObjectName string
-	Command    string
-	Region     string
-	Parameter  string
+	ConfigPath      string // path to a config file
+	ApiKey          string
+	ApiUser         string
+	Container       string
+	ObjectName      string
+	Command         string
+	Region          string
+	Parameter       string
+	SecondParameter string
+	TTL             int // time to live (for file uploads). 0 means "forever"
 }
 
 const (
@@ -112,6 +114,7 @@ func parseCommandLine() (params Params) {
 	flag.StringVar(&params.ApiUser, "user", "", "Rackspace API username")
 	flag.StringVar(&params.Container, "container", "", "Cloud Files container name")
 	flag.StringVar(&params.Region, "region", "", "Cloud Files region to use, like DFW, ORD, etc")
+	flag.IntVar(&params.TTL, "ttl", 0, "Time to live in seconds. 0 (default) means forever")
 
 	flag.Usage = func() {
 		fmt.Printf("gput is a client for Rackspace Cloud files\n\n")
@@ -131,12 +134,14 @@ func parseCommandLine() (params Params) {
 		fmt.Printf("\tgput -region DFW list public-container\n")
 		fmt.Printf("\tgput -region DFW -container public-container delete example.txt\n")
 		fmt.Printf("\tgput -region DFW put example.txt\n")
+		fmt.Printf("\tgput -ttl 600 put example.txt\n")
 	}
 
 	flag.Parse()
 
 	params.Command = flag.Arg(0)
 	params.Parameter = flag.Arg(1)
+	params.SecondParameter = flag.Arg(2)
 
 	// first command is a file name? assume it's a parameter
 	if fileExists(params.Command) {

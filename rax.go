@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -127,9 +128,13 @@ func (s *RaxSession) listObjects(container string) (err error) {
 }
 
 // Create/update CloudFiles object (file)
-func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string) {
+func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string, ttl int) {
 	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
 	request := s.makeRequest("PUT", url, r)
+
+	if ttl > 0 {
+		request.Header.Add("X-Delete-After", strconv.Itoa(ttl))
+	}
 
 	resp, err := http.DefaultClient.Do(request)
 	panicIf(err)

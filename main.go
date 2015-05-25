@@ -44,12 +44,20 @@ func main() {
 		}
 		file, err := os.Open(params.Parameter)
 		exitIf(err)
-		session.upsertObject(file, params.Container, filepath.Base(params.Parameter))
+
+		filename := filepath.Base(params.Parameter)
+		if params.SecondParameter != "" {
+			filename = params.SecondParameter
+		}
+		session.upsertObject(file, params.Container, filename, params.TTL)
 
 	case CommandDel:
 		if params.Container == "" {
 			exitWith("No container specified")
 		}
 		session.deleteObject(params.Container, params.Parameter)
+
+	default:
+		fmt.Println("Unrecoognized command")
 	}
 }
