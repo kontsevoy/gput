@@ -30,7 +30,7 @@ target container is CDN-enabled, it will print public URLs for HTTP and HTTPS.
 
 ```
 Usage:
-	gput <options> <command> <file>
+	gput <options> [command] ...
 
 Commands:
 	put   :	Upload file into a container. This command executes by default.
@@ -45,6 +45,7 @@ Options:
 	-region : Cloud Files region to use, like DFW, ORD, etc
 	-ttl : Time to live in seconds. 0 (default) means forever
 	-user : Rackspace API username
+	-h : Print this usage information
 
 Examples:
 	gput example.txt   (assumes the region and container are in a config file)
