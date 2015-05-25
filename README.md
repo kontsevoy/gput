@@ -2,6 +2,13 @@
 
 Actually this is not a full client and does not support all features of [Cloud Files](http://www.rackspace.com/cloud/files), a similar service to Amazon S3. Its usability is optimized for quickly uploading files into containers. It can take most parameters out of `~/.gput.ini` file for quickness.
 
+#### Installation
+
+Run: 
+```
+$ go install github.com/kontsevoy/gput
+```
+
 For convenience, here are latest binaries for [64-bit Linux](https://github.com/kontsevoy/gput/raw/master/build/gput-linux-x86_64) or [Mac OSX](https://github.com/kontsevoy/gput/raw/master/build/gput-darwin) if you cannot compile from source.
 
 #### Why?
