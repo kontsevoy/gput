@@ -97,9 +97,14 @@ func (ai *RaxSession) getEntryPoint(region string, serviceType string) (entryPoi
 	return
 }
 
-// getUrl() return object store URL
+// return object store URL
 func (s *RaxSession) getObjectStoreUrl() string {
 	return s.getEntryPoint(s.Region, "object-store")
+}
+
+// return a CDN URL
+func (s *RaxSession) getCdnUrl() string {
+	return s.getEntryPoint(s.Region, "rax:object-cdn")
 }
 
 // listContainers() makes a GET request to list the root containers
@@ -140,6 +145,17 @@ func (s *RaxSession) upsertObject(r io.Reader, container string, objectName stri
 	panicIf(err)
 
 	fmt.Println(resp.Status)
+
+	// get CDN URL for the uploaded file:
+	url = strings.Join([]string{s.getCdnUrl(), container}, "/")
+	request = s.makeRequest("HEAD", url, nil)
+	resp, err = http.DefaultClient.Do(request)
+	panicIf(err)
+
+	if resp.Header["X-Cdn-Uri"] != nil {
+		fmt.Println(resp.Header["X-Cdn-Uri"][0] + "/" + objectName)
+		fmt.Println(resp.Header["X-Cdn-Ssl-Uri"][0] + "/" + objectName)
+	}
 }
 
 // Delete cloud files object:
