@@ -1,9 +1,27 @@
 ### gput - CLI client for Rackspace Cloud Files
 
-Actually this is not a true client, its usability is optimized for quickly uploading files into containers. 
-It can take most parameters out of `~/.gput.ini` file for quickness and convenience.
+Actually this is not a full client and does not support all features of [Cloud Files](http://www.rackspace.com/cloud/files), a similar service to Amazon S3. Its usability is optimized for quickly uploading files into containers. It can take most parameters out of `~/.gput.ini` file for quickness.
+
+#### Installation
+
+Run: 
+```
+$ go install github.com/kontsevoy/gput
+```
 
 For convenience, here are latest binaries for [64-bit Linux](http://i.kontsevoy/gput/gput-linux-x86_64) or [Mac OSX](http://i.kontsevoy/gput/gput-darwin) if you cannot compile from source.
+
+#### Why?
+
+I needed a real world project to learn Go. I also needed a quicker way to share files, or sometimes just the std output of something, with other people. So I wrote `gput`. Here's how I quickly upload get a public URL for a file, which will only exist for 1 hour:
+
+```
+$ gput -ttl 600 build.log 
+201 Created
+http://4ae40c0c72b6359660b2-9a0aa15bf6dbebe33d1d027dbc9d76cd.r73.cf1.rackcdn.com/build.log
+https://b2d1a1f1f5e5744aef4b-9a0aa15bf6dbebe33d1d027dbc9d76cd.ssl.cf1.rackcdn.com/build.log
+```
+Those URLs can be quickly copy&pasted into a chat window or sent via email. They will stop working after 1 hour (600 seconds) automatically.
 
 #### Usage & Examples
 
