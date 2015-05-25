@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -118,7 +119,7 @@ func parseCommandLine() (params Params) {
 
 	flag.Usage = func() {
 		fmt.Printf("gput is a client for Rackspace Cloud files\n\n")
-		fmt.Printf("Usage:\n\tgput <options> <command> <file>\n\n")
+		fmt.Printf("Usage:\n\tgput <options> [command] ...\n\n")
 		fmt.Printf("Commands:\n")
 		fmt.Printf("\tput   :\tUpload file into a container. This command executes by default.\n")
 		fmt.Printf("\tlist  :\tLlist containers or files within a container\n")
@@ -128,16 +129,30 @@ func parseCommandLine() (params Params) {
 		flag.VisitAll(func(f *flag.Flag) {
 			fmt.Printf("\t-%v : %v\n", f.Name, f.Usage)
 		})
+		fmt.Printf("\t-h : Print this usage information")
 		fmt.Printf("\nExamples:\n")
+		fmt.Printf("\tgput example.txt\n")
+		fmt.Printf("\tgput example.txt folder/example.txt\n")
+		fmt.Printf("\tgput example.txt new-name.txt\n")
+		fmt.Printf("\tgput -region DFW put example.txt\n")
+		fmt.Printf("\tgput -ttl 600 put example.txt\n")
 		fmt.Printf("\tgput -region DFW list\n")
 		fmt.Printf("\tgput -region DFW -container public-container list\n")
 		fmt.Printf("\tgput -region DFW list public-container\n")
 		fmt.Printf("\tgput -region DFW -container public-container delete example.txt\n")
-		fmt.Printf("\tgput -region DFW put example.txt\n")
-		fmt.Printf("\tgput -ttl 600 put example.txt\n")
 	}
 
 	flag.Parse()
+
+	// make sure all args aren't options (don't start with -). this happens when a user
+	// puts a command in front of options instead of behind
+	for _, a := range flag.Args() {
+		if a[0] == '-' {
+			fmt.Println("Invalid command line options")
+			flag.Usage()
+			os.Exit(1)
+		}
+	}
 
 	params.Command = flag.Arg(0)
 	params.Parameter = flag.Arg(1)

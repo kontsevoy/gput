@@ -9,7 +9,7 @@ Run:
 $ go install github.com/kontsevoy/gput
 ```
 
-For convenience, here are latest binaries for [64-bit Linux](http://i.kontsevoy/gput/gput-linux-x86_64) or [Mac OSX](http://i.kontsevoy/gput/gput-darwin) if you cannot compile from source.
+For convenience, here are latest binaries for [64-bit Linux](http://i.kontsevoy.com/gput/gput-linux-x86_64) or [Mac OSX](http://i.kontsevoy.com/gput/gput-darwin) if you cannot compile from source.
 
 #### Why?
 
