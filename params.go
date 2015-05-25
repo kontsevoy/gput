@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -138,6 +139,16 @@ func parseCommandLine() (params Params) {
 	}
 
 	flag.Parse()
+
+	// make sure all args aren't options (don't start with -). this happens when a user
+	// puts a command in front of options instead of behind
+	for _, a := range flag.Args() {
+		if a[0] == '-' {
+			fmt.Println("Invalid command line options")
+			flag.Usage()
+			os.Exit(1)
+		}
+	}
 
 	params.Command = flag.Arg(0)
 	params.Parameter = flag.Arg(1)
