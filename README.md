@@ -5,6 +5,18 @@ It can take most parameters out of `~/.gput.ini` file for quickness and convenie
 
 For convenience, here are latest binaries for [64-bit Linux](https://github.com/kontsevoy/gput/raw/master/build/gput-linux-x86_64) or [Mac OSX](https://github.com/kontsevoy/gput/raw/master/build/gput-darwin) if you cannot compile from source.
 
+#### Why?
+
+I needed a real world project to learn Go. I also needed a quicker way to share files, or sometimes just the std output of something, with other people. So I wrote `gput`. Here's how I quickly upload get a public URL for a file, which will only exist for 10 minutes:
+
+```
+$ gput -ttl 600 build.log 
+201 Created
+http://4ae40c0c72b6359660b2-9a0aa15bf6dbebe33d1d027dbc9d76cd.r73.cf1.rackcdn.com/build.log
+https://b2d1a1f1f5e5744aef4b-9a0aa15bf6dbebe33d1d027dbc9d76cd.ssl.cf1.rackcdn.com/build.log
+```
+Those URLs can be quickly copy&pasted into a chat window or sent via email. They will stop working after 1 hour (600 seconds) automatically.
+
 #### Usage & Examples
 
 `gput` uses `put` command by default unless something else (like `list` or `delete`) is secified. If a 
