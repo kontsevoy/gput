@@ -48,7 +48,9 @@ func main() {
 		filename := filepath.Base(params.Parameter)
 		if params.SecondParameter != "" {
 			filename = params.SecondParameter
+			fmt.Println("Got second par!")
 		}
+		fmt.Println("Second par: " + filename)
 		session.upsertObject(file, params.Container, filename, params.TTL)
 
 	case CommandDel:

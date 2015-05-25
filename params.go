@@ -147,6 +147,7 @@ func parseCommandLine() (params Params) {
 	if fileExists(params.Command) {
 		params.Command = DefaultCommand
 		params.Parameter = flag.Arg(0)
+		params.SecondParameter = flag.Arg(1)
 	}
 
 	return

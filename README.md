@@ -3,7 +3,7 @@
 Actually this is not a true client, its usability is optimized for quickly uploading files into containers. 
 It can take most parameters out of `~/.gput.ini` file for quickness and convenience.
 
-For convenience, here are latest binaries for [64-bit Linux](https://github.com/kontsevoy/gput/raw/master/build/gput-linux-x86_64) or [Mac OSX](https://github.com/kontsevoy/gput/raw/master/build/gput-darwin) if you cannot compile from source.
+For convenience, here are latest binaries for [64-bit Linux](http://i.kontsevoy/gput/gput-linux-x86_64) or [Mac OSX](http://i.kontsevoy/gput/gput-darwin) if you cannot compile from source.
 
 #### Usage & Examples
 
@@ -31,11 +31,13 @@ Options:
 Examples:
 	gput example.txt   (assumes the region and container are in a config file)
 	gput -region DFW put example.txt new-name.txt
+	gput -region DFW put example.txt folder/name.txt
 	gput -ttl 600 put example.txt
 	gput -region DFW list
 	gput -region DFW -container public-container list
 	gput -region DFW list public-container
 	gput -region DFW -container public-container delete example.txt
+	gput delete folder/example.txt
 ```
 
 #### Config File
