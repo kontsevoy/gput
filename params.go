@@ -27,6 +27,7 @@ type Params struct {
 	Region          string
 	Parameter       string
 	SecondParameter string
+	CnameHost       string
 	TTL             int // time to live (for file uploads). 0 means "forever"
 }
 
@@ -44,6 +45,7 @@ username=xxxxxxxxxxxxx
 [Cloud Files]
 container=public-container
 region=DFW
+cname=cdn.example.com
 `
 
 // list of possible commands:
@@ -82,6 +84,9 @@ func ProcessConfig() (params Params, err error) {
 		params.Region = iniConf.Get("CloudFiles", "region")
 	}
 	params.Region = strings.ToUpper(params.Region)
+	if params.CnameHost == "" {
+		params.CnameHost = iniConf.Get("CloudFiles", "cname")
+	}
 
 	// check correctness:
 	err = checkConfig(&params)
@@ -115,6 +120,7 @@ func parseCommandLine() (params Params) {
 	flag.StringVar(&params.ApiUser, "user", "", "Rackspace API username")
 	flag.StringVar(&params.Container, "container", "", "Cloud Files container name")
 	flag.StringVar(&params.Region, "region", "", "Cloud Files region to use, like DFW, ORD, etc")
+	flag.StringVar(&params.CnameHost, "cname", "", "Your CNAME record for Cloud Files CDN for convenient output of URLs")
 	flag.IntVar(&params.TTL, "ttl", 0, "Time to live in seconds. 0 (default) means forever")
 
 	flag.Usage = func() {

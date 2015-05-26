@@ -133,7 +133,7 @@ func (s *RaxSession) listObjects(container string) (err error) {
 }
 
 // Create/update CloudFiles object (file)
-func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string, ttl int) {
+func (s *RaxSession) upsertObject(r io.Reader, container string, objectName string, ttl int) (urls []string) {
 	url := strings.Join([]string{s.getObjectStoreUrl(), container, objectName}, "/")
 	request := s.makeRequest("PUT", url, r)
 
@@ -152,10 +152,12 @@ func (s *RaxSession) upsertObject(r io.Reader, container string, objectName stri
 	resp, err = http.DefaultClient.Do(request)
 	panicIf(err)
 
+	// return the URLs for the uploaded object
 	if resp.Header["X-Cdn-Uri"] != nil {
-		fmt.Println(resp.Header["X-Cdn-Uri"][0] + "/" + objectName)
-		fmt.Println(resp.Header["X-Cdn-Ssl-Uri"][0] + "/" + objectName)
+		urls = []string{resp.Header["X-Cdn-Uri"][0] + "/" + objectName,
+			resp.Header["X-Cdn-Ssl-Uri"][0] + "/" + objectName}
 	}
+	return
 }
 
 // Delete cloud files object:

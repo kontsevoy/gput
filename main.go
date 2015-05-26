@@ -49,7 +49,8 @@ func main() {
 		if params.SecondParameter != "" {
 			filename = params.SecondParameter
 		}
-		session.upsertObject(file, params.Container, filename, params.TTL)
+		urls := session.upsertObject(file, params.Container, filename, params.TTL)
+		printUrls(urls, params.CnameHost)
 
 	case CommandDel:
 		if params.Container == "" {
@@ -59,5 +60,15 @@ func main() {
 
 	default:
 		fmt.Println("Unrecoognized command")
+	}
+}
+
+// Takes a slice of URLs and prints them, replacing their hostname with a given one, if provided
+func printUrls(urls []string, hostname string) {
+	for _, url := range urls {
+		if hostname != "" {
+			url = replaceHostnameIn(url, hostname)
+		}
+		fmt.Println(url)
 	}
 }
