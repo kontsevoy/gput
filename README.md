@@ -13,7 +13,7 @@ For convenience, here are latest binaries for [64-bit Linux](http://i.kontsevoy.
 
 #### Why?
 
-I needed a real world project to learn Go. I also needed a quicker way to share files, or sometimes just the std output of something, with other people. So I wrote `gput`. Here's how I quickly upload get a public URL for a file, which will only exist for 1 hour:
+I needed a real world project to learn Go. I also needed a quicker way to share files or sometimes just a standard output of something. So I wrote `gput`. Here's how to quickly upload a file and get a public URL, which will only exist for 1 hour:
 
 ```
 $ gput -ttl 600 build.log 
